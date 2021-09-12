@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { withRouter } from "react-router";
+import SimpleReactValidator from "simple-react-validator";
 import { loginUser } from "../../../../Services/UserServices";
 
-const Card = () => {
+const Card = (props) => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
 
@@ -9,6 +11,9 @@ const Card = () => {
     setEmail("");
     setPassword("");
   };
+
+  const [forceUpdate, setForceUpdate] = useState(0);
+  const simpleValidator = useRef(new SimpleReactValidator());
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -19,13 +24,19 @@ const Card = () => {
     };
 
     try {
-      const response = await loginUser(user);
+      if (simpleValidator.current.allValid()) {
+        const response = await loginUser(user);
 
         alert("you are login...");
-        
-        localStorage.setItem("token",response.data.token)
+
+        localStorage.setItem("token", response.data.token);
         handleResetForm();
+        props.history.replace("/");
         // console.log(JSON.parse(atob(response.data.token.split('.')[1])));
+      } else {
+        setForceUpdate(1);
+        simpleValidator.current.showMessages();
+      }
     } catch (error) {
       // alert(error.response.data.message);
       console.log(error.response);
@@ -46,6 +57,7 @@ const Card = () => {
                 <i className="zmdi zmdi-email"></i>
               </span>
               <input
+                name="email"
                 type="text"
                 className="form-control"
                 placeholder="ایمیل"
@@ -54,7 +66,16 @@ const Card = () => {
                 onChange={(event) => {
                   setEmail(event.currentTarget.value);
                 }}
+                onBlur={() => {
+                  setForceUpdate(1);
+                  simpleValidator.current.showMessageFor("email");
+                }}
               />
+              {simpleValidator.current.message(
+                "email",
+                email,
+                "required|email"
+              )}
             </div>
 
             <div className="input-group">
@@ -99,4 +120,4 @@ const Card = () => {
   );
 };
 
-export default Card;
+export default withRouter(Card);
