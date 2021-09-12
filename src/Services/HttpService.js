@@ -9,14 +9,12 @@ axios.interceptors.response.use(
     return response;
   },
   function (error) {
-    if (
-      !(
-        error.response &&
-        error.response.status >= 400 &&
-        error.response.status < 500
-      )
-    ) {
+    if (!(error.response && error.response.status >= 400 && error.response.status < 500)) {
       alert("server error...");
+    }
+
+    if(error.response && error.response.status === 422){
+      alert("un processable entity")
     }
 
     return Promise.reject(error);

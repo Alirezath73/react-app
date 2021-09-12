@@ -21,12 +21,13 @@ const Card = () => {
     try {
       const response = await loginUser(user);
 
-        alert("you right...");
-        handleResetForm();
+        alert("you are login...");
         
-        console.log(JSON.parse(atob(response.data.token.split('.')[1])));
+        localStorage.setItem("token",response.data.token)
+        handleResetForm();
+        // console.log(JSON.parse(atob(response.data.token.split('.')[1])));
     } catch (error) {
-      alert(error.response.data.message);
+      // alert(error.response.data.message);
       console.log(error.response);
     }
   };
