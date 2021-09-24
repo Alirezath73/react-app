@@ -1,11 +1,19 @@
 import { useRef, useState } from "react";
 import { withRouter } from "react-router";
+
 import SimpleReactValidator from "simple-react-validator";
 import { loginUser } from "../../../../Services/UserServices";
+import { Lines } from "react-preloaders";
+import { Helmet } from "react-helmet";
+import { useDispatch } from "react-redux";
+import { handleLogin } from "../../../../Redux/Actions/userActions";
 
 const Card = (props) => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
+  const [loading, setLoading] = useState(false);
+
+  const dispatch = useDispatch();
 
   const handleResetForm = () => {
     setEmail("");
@@ -13,7 +21,18 @@ const Card = (props) => {
   };
 
   const [forceUpdate, setForceUpdate] = useState(0);
-  const simpleValidator = useRef(new SimpleReactValidator());
+  const simpleValidator = useRef(
+    new SimpleReactValidator({
+      messages: {
+        required: "لطفا این فیلد را وارد کنید.",
+        email: "لطفا ایمیل وارد کنید.",
+        min: "حداقل باید ۸ کاراکتر وارد کنید.",
+      },
+      element: (message) => (
+        <div style={{ color: "darkred", margin: "3px" }}>{message}</div>
+      ),
+    })
+  );
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -25,20 +44,24 @@ const Card = (props) => {
 
     try {
       if (simpleValidator.current.allValid()) {
+        setLoading(true);
         const response = await loginUser(user);
 
-        alert("you are login...");
+        const decodeToken = JSON.parse(atob(response.data.token.split(".")[1]));
+
+        dispatch(handleLogin(decodeToken.user));
 
         localStorage.setItem("token", response.data.token);
+        setLoading(false);
         handleResetForm();
-        props.history.replace("/");
-        // console.log(JSON.parse(atob(response.data.token.split('.')[1])));
+        props.history.push("/");
       } else {
         setForceUpdate(1);
         simpleValidator.current.showMessages();
       }
     } catch (error) {
-      // alert(error.response.data.message);
+      alert(error.response.data.message);
+      setLoading(false);
       console.log(error.response);
     }
   };
@@ -49,7 +72,11 @@ const Card = (props) => {
         <header>
           <h2> ورود به سایت </h2>
         </header>
-
+        <Helmet>
+          <title>ورود به سایت </title>
+          <meta name="description" content="Helmet application" />
+        </Helmet>
+        {loading ? <Lines customLoading={loading} time={0} /> : null}
         <div className="form-layer">
           <form action="" method="" onSubmit={handleSubmit}>
             <div className="input-group">
@@ -66,10 +93,10 @@ const Card = (props) => {
                 onChange={(event) => {
                   setEmail(event.currentTarget.value);
                 }}
-                onBlur={() => {
+                /* onBlur={() => {
                   setForceUpdate(1);
                   simpleValidator.current.showMessageFor("email");
-                }}
+                }} */
               />
               {simpleValidator.current.message(
                 "email",
@@ -83,6 +110,7 @@ const Card = (props) => {
                 <i className="zmdi zmdi-lock"></i>
               </span>
               <input
+                name="password"
                 type="text"
                 className="form-control"
                 placeholder="رمز عبور "
@@ -91,7 +119,16 @@ const Card = (props) => {
                 onChange={(event) => {
                   setPassword(event.currentTarget.value);
                 }}
+                /* onBlur={() => {
+                  setForceUpdate(1);
+                  simpleValidator.current.showMessageFor("password");
+                }} */
               />
+              {simpleValidator.current.message(
+                "password",
+                password,
+                "required|min:8"
+              )}
             </div>
 
             <div className="remember-me">

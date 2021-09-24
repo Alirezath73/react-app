@@ -1,4 +1,8 @@
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+
 const Navigation = () => {
+  const user = useSelector((state) => state.user);
   return (
     <nav>
       <div className="row">
@@ -11,18 +15,16 @@ const Navigation = () => {
             </li>
           </ul>
         </div>
-        <div className="col-sm-6 col-xs-12">
-          <div className="clientarea">
-            <div className="loggein ">
-              <i className="zmdi zmdi-account"></i>
-              <a href=""> ایمان مدائنی ، خوش آمدی </a>
-            </div>
-            <div className="signin hidden">
-              <i className="zmdi zmdi-account"></i>
-              <a href=""> ورود </a> /<a href=""> عضویت </a>
+        {Object.keys(user).length !== 0 ? (
+          <div className="col-sm-6 col-xs-12">
+            <div className="clientarea">
+              <div className="loggein ">
+                <i className="zmdi zmdi-account"></i>
+                <Link to="/user-profile"> {user.fullname} ، خوش آمدی </Link>
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </nav>
   );
